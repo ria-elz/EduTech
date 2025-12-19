@@ -49,28 +49,34 @@ export default function Layout({ children }) {
             )}
 
             {/* TEACHER LINKS */}
-            {session?.user?.role === 'TEACHER' && (
-              <>
-                <Link
-                  href="/teacher"
-                  className="mr-4 text-gray-700 hover:text-blue-600 font-medium"
-                >
-                  Teacher Dashboard
-                </Link>
-                <Link
-                  href="/teacher/courses/new"
-                  className="mr-4 text-green-600 hover:text-green-800 font-medium"
-                >
-                  + New Course
-                </Link>
-                <Link
-                  href="/teacher/marks"
-                  className="mr-4 text-gray-700 hover:text-blue-600"
-                >
-                  📊 Marks
-                </Link>
-              </>
-            )}
+{session?.user?.role === 'TEACHER' && (
+  <>
+    <Link
+      href="/teacher"
+      className="mr-4 text-gray-700 hover:text-blue-600 font-medium"
+    >
+      Teacher Dashboard
+    </Link>
+    <Link
+      href="/teacher/grading"
+      className="mr-4 text-orange-600 hover:text-orange-800 font-medium"
+    >
+      📝 Grading
+    </Link>
+    <Link
+      href="/teacher/courses/new"
+      className="mr-4 text-green-600 hover:text-green-800 font-medium"
+    >
+      + New Course
+    </Link>
+    <Link
+      href="/teacher/marks"
+      className="mr-4 text-gray-700 hover:text-blue-600"
+    >
+      📊 Marks
+    </Link>
+  </>
+)}
 
             {/* STUDENT LINKS */}
             {session && session.user.role === 'STUDENT' && (
@@ -87,6 +93,12 @@ export default function Layout({ children }) {
                 >
                   📈 My Progress
                 </Link>
+                 <Link
+      href="/my-certificates"
+      className="mr-4 text-gray-700 hover:text-blue-600"
+    >
+      🏆 Certificates
+    </Link>
               </>
             )}
 

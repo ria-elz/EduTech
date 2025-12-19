@@ -69,37 +69,57 @@ export default function MyMarksPage() {
         ) : (
           <div className="space-y-4">
             {submissions.map((sub) => (
-              <div key={sub.id} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h3 className="font-bold text-xl mb-1">{sub.quiz.title}</h3>
-                    <p className="text-sm text-gray-500 mb-2">
-                      📅 Submitted: {new Date(sub.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                    {sub.quiz.lesson && (
-                      <p className="text-sm text-gray-600">
-                        Lesson: {sub.quiz.lesson.title}
-                      </p>
-                    )}
-                  </div>
-                  <div className="text-right ml-4">
-                    <div className="text-4xl font-bold text-blue-600 mb-1">
-                      {sub.score}%
-                    </div>
-                    <div className="text-sm text-gray-500">Score</div>
-                    {sub.score >= 80 && <div className="text-2xl mt-2">🏆</div>}
-                    {sub.score >= 60 && sub.score < 80 && <div className="text-2xl mt-2">👍</div>}
-                    {sub.score < 60 && <div className="text-2xl mt-2">📚</div>}
-                  </div>
-                </div>
-              </div>
-            ))}
+  <div key={sub.id} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+    <div className="flex justify-between items-start">
+      <div className="flex-1">
+        <h3 className="font-bold text-xl mb-1">{sub.quiz.title}</h3>
+        <p className="text-sm text-gray-500 mb-2">
+          📅 Submitted: {new Date(sub.createdAt).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+        </p>
+        {sub.quiz.lesson && (
+          <p className="text-sm text-gray-600">
+            Lesson: {sub.quiz.lesson.title}
+          </p>
+        )}
+      </div>
+      <div className="text-right ml-4">
+        {sub.status === 'PENDING' ? (
+          <div>
+            <div className="text-2xl mb-1">⏳</div>
+            <div className="text-sm bg-yellow-100 text-yellow-800 px-3 py-1 rounded">
+              Pending Review
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className="text-4xl font-bold text-blue-600 mb-1">
+              {sub.score}%
+            </div>
+            <div className="text-sm text-gray-500">Score</div>
+            {sub.score >= 80 && <div className="text-2xl mt-2">🏆</div>}
+            {sub.score >= 60 && sub.score < 80 && <div className="text-2xl mt-2">👍</div>}
+            {sub.score < 60 && <div className="text-2xl mt-2">📚</div>}
+          </div>
+        )}
+      </div>
+    </div>
+    
+    <div className="mt-4 pt-4 border-t">
+      <Link
+        href={`/submission/${sub.id}`}
+        className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded font-semibold"
+      >
+        View Details →
+      </Link>
+    </div>
+  </div>
+))}
           </div>
         )}
       </div>
