@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String?
+  email        String        @unique
+  password     String
+  role         String        @default("STUDENT")
+  createdAt    DateTime      @default(now())
+
+  courses      Course[]      @relation("AuthorCourses")
+  enrollments  Enrollment[]
+  submissions  Submission[]
+  progress     Progress[]
+}
+
+model Course {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  description String?
+  published   Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+
+  authorId    String
+  author      User          @relation("AuthorCourses", fields: [authorId], references: [id])
+
+  modules     Module[]
+  enrollments Enrollment[]
+}
+
+model Module {
+  id        String   @id @default(cuid())
+  title     String
+  position  Int
+
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  lessons   Lesson[]
+}
+
+model Lesson {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?
+  position  Int
+  videoUrl  String?
+  pdfUrl    String?
+  audioUrl  String?
+
+  moduleId  String
+  module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  quiz      Quiz?
+  progress  Progress[]
+}
+
+model Quiz {
+  id        String     @id @default(cuid())
+  title     String
+  duration  Int?
+
+  lessonId  String     @unique
+  lesson    Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  questions   Question[]
+  submissions Submission[]
+}
+
+model Question {
+  id       String   @id @default(cuid())
+  text     String
+  type     String   @default("MCQ")
+  points   Int      @default(1)
+
+  quizId   String
+  quiz     Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  answers  Answer[]
+  submissionAnswers SubmissionAnswer[]
+}
+
+model Answer {
+  id          String   @id @default(cuid())
+  text        String
+  isCorrect   Boolean  @default(false)
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model Enrollment {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  userId    String
+  courseId  String
+
+  user      User     @relation(fields: [userId], references: [id])
+  course    Course   @relation(fields: [courseId], references: [id])
+}
+
+model Submission {
+  id        String   @id @default(cuid())
+  score     Int?
+  status    String   @default("PENDING")
+  feedback  String?
+  createdAt DateTime @default(now())
+  gradedAt  DateTime?
+
+  userId    String
+  quizId    String
+
+  user      User     @relation(fields: [userId], references: [id])
+  quiz      Quiz     @relation(fields: [quizId], references: [id])
+  answers   SubmissionAnswer[]
+}
+
+model SubmissionAnswer {
+  id               String   @id @default(cuid())
+  answerText       String?
+  fileUrl          String?
+  selectedAnswerId String?
+  points           Int?
+  feedback         String?
+  createdAt        DateTime @default(now())
+
+  submissionId String
+  questionId   String
+
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  question     Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([submissionId, questionId])
+}
+
+model Progress {
+  id          String   @id @default(cuid())
+  completed   Boolean  @default(false)
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  userId      String
+  lessonId    String
+
+  user        User     @relation(fields: [userId], references: [id])
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}

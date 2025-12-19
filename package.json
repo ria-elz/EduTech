@@ -1,0 +1,29 @@
+{
+  "name": "education-portal-starter",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start",
+    "prisma": "prisma",
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^4.15.0",
+    "bcryptjs": "^2.4.3",
+    "formidable": "^3.5.4",
+    "next": "13.4.8",
+    "next-auth": "^4.22.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "slugify": "^1.6.6",
+    "swr": "^2.3.8"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.21",
+    "prisma": "^4.15.0",
+    "tailwindcss": "^3.4.6"
+  }
+}
