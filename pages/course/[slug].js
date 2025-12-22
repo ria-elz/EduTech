@@ -12,21 +12,27 @@ export default function CoursePage() {
   const { data: session } = useSession()
 
   const { data: course } = useSWR(slug ? `/api/courses/${slug}` : null, fetcher)
-  const { data: enrollment, mutate } = useSWR(
-    slug && session ? `/api/enrollments/${slug}` : null,
+  const { data: reviews, mutate: mutateReviews } = useSWR(
+    slug ? `/api/courses/${slug}/review` : null,
     fetcher
   )
- const { data: reviews, mutate: mutateReviews } = useSWR(
-  slug ? `/api/courses/${slug}/review` : null,
-  fetcher
-)
+  const { data: announcements, mutate: mutateAnnouncements } = useSWR(
+    slug ? `/api/courses/${slug}/announcements` : null,
+    fetcher
+  )
+
   const [enrolling, setEnrolling] = useState(false)
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  
+  const [showAnnouncementForm, setShowAnnouncementForm] = useState(false)
+  const [announcementTitle, setAnnouncementTitle] = useState('')
+  const [announcementContent, setAnnouncementContent] = useState('')
+  const [postingAnnouncement, setPostingAnnouncement] = useState(false)
 
-  const enrolled = enrollment?.enrolled
+  const enrolled = course?.enrollments?.some(e => e.userId === session?.user?.id) || false
 
   const handleEnroll = async () => {
     if (!session) {
@@ -35,16 +41,19 @@ export default function CoursePage() {
     }
 
     setEnrolling(true)
-    const res = await fetch(`/api/enrollments/${slug}`, {
+    const res = await fetch('/api/enroll', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ courseId: course.id })
     })
     setEnrolling(false)
 
     if (res.ok) {
       alert('Enrolled successfully!')
-      mutate()
+      router.reload()
     } else {
-      alert('Failed to enroll')
+      const data = await res.json()
+      alert(data.message || 'Failed to enroll')
     }
   }
 
@@ -73,6 +82,35 @@ export default function CoursePage() {
     }
   }
 
+  const submitAnnouncement = async () => {
+    setPostingAnnouncement(true)
+    try {
+      const res = await fetch(`/api/courses/${slug}/announcements`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          title: announcementTitle, 
+          content: announcementContent 
+        })
+      })
+
+      if (res.ok) {
+        alert('Announcement posted successfully!')
+        setShowAnnouncementForm(false)
+        setAnnouncementTitle('')
+        setAnnouncementContent('')
+        mutateAnnouncements()
+      } else {
+        const data = await res.json()
+        alert(data.message || 'Failed to post announcement')
+      }
+    } catch (error) {
+      alert('Error posting announcement')
+    } finally {
+      setPostingAnnouncement(false)
+    }
+  }
+
   if (!course) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -83,6 +121,8 @@ export default function CoursePage() {
       </div>
     )
   }
+
+  const isTeacher = session?.user?.role === 'TEACHER' && course.author.id === session.user.id
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -105,7 +145,7 @@ export default function CoursePage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
-        {!enrolled && (
+        {!enrolled && !isTeacher && (
           <div className="bg-white rounded-lg shadow p-6 mb-6">
             <div className="flex justify-between items-center">
               <div>
@@ -131,6 +171,14 @@ export default function CoursePage() {
           </div>
         )}
 
+        {isTeacher && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <p className="text-blue-800 font-semibold">
+              👨‍🏫 You are the instructor of this course
+            </p>
+          </div>
+        )}
+
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-2xl font-bold mb-6">Course Content</h2>
 
@@ -148,7 +196,7 @@ export default function CoursePage() {
                           <li key={lesson.id} className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="text-gray-400">📄</span>
-                              {enrolled ? (
+                              {enrolled || isTeacher ? (
                                 <Link
                                   href={'/lesson/' + lesson.id}
                                   className="text-blue-600 hover:underline"
@@ -191,6 +239,86 @@ export default function CoursePage() {
           )}
         </div>
 
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">📢 Announcements</h2>
+            {isTeacher && (
+              <button
+                onClick={() => setShowAnnouncementForm(!showAnnouncementForm)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-semibold"
+              >
+                {showAnnouncementForm ? 'Cancel' : '+ New Announcement'}
+              </button>
+            )}
+          </div>
+
+          {showAnnouncementForm && (
+            <div className="bg-gray-50 rounded-lg p-6 mb-6">
+              <h3 className="font-bold mb-4">Post New Announcement</h3>
+              
+              <div className="mb-4">
+                <label className="block font-semibold mb-2">Title</label>
+                <input
+                  type="text"
+                  value={announcementTitle}
+                  onChange={(e) => setAnnouncementTitle(e.target.value)}
+                  className="w-full border rounded-lg px-4 py-3"
+                  placeholder="Announcement title..."
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block font-semibold mb-2">Message</label>
+                <textarea
+                  value={announcementContent}
+                  onChange={(e) => setAnnouncementContent(e.target.value)}
+                  className="w-full border rounded-lg px-4 py-3"
+                  rows="4"
+                  placeholder="Announcement message..."
+                />
+              </div>
+
+              <button
+                onClick={submitAnnouncement}
+                disabled={postingAnnouncement || !announcementTitle || !announcementContent}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold disabled:bg-gray-400"
+              >
+                {postingAnnouncement ? 'Posting...' : 'Post Announcement'}
+              </button>
+            </div>
+          )}
+
+          {announcements && announcements.length > 0 ? (
+            <div className="space-y-4">
+              {announcements.map((announcement) => (
+                <div key={announcement.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-bold text-lg">{announcement.title}</h3>
+                    <span className="text-sm text-gray-500">
+                      {new Date(announcement.createdAt).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                  <p className="text-gray-700 whitespace-pre-wrap mb-3">{announcement.content}</p>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <span>👨‍🏫</span>
+                    <span>{announcement.author.name || 'Instructor'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-8">
+              No announcements yet
+            </p>
+          )}
+        </div>
+
         {enrolled && (
           <div className="bg-white rounded-lg shadow p-6 mb-6">
             <div className="flex justify-between items-center mb-6">
@@ -199,7 +327,7 @@ export default function CoursePage() {
                 onClick={() => setShowReviewForm(!showReviewForm)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-semibold"
               >
-                {showReviewForm ? 'Cancel' : 'Write a Review'}
+                {showReviewForm ? 'Cancel' : 'Write Review'}
               </button>
             </div>
 
@@ -229,7 +357,7 @@ export default function CoursePage() {
                     onChange={(e) => setComment(e.target.value)}
                     className="w-full border rounded-lg px-4 py-3"
                     rows="4"
-                    placeholder="Share your experience with this course..."
+                    placeholder="Share your experience..."
                   />
                 </div>
 
@@ -273,7 +401,7 @@ export default function CoursePage() {
               </div>
             ) : (
               <p className="text-gray-500 text-center py-8">
-                No reviews yet. Be the first to review this course!
+                No reviews yet. Be the first to review!
               </p>
             )}
           </div>

@@ -20,6 +20,8 @@ model User {
   submissions  Submission[]
   progress     Progress[]
   certificates Certificate[] 
+  reviews      Review[]   
+  announcements  Announcement[]  
 }
 
 model Course {
@@ -27,6 +29,7 @@ model Course {
   title       String
   slug        String        @unique
   description String?
+  category    String        @default("Other")
   published   Boolean       @default(false)
   createdAt   DateTime      @default(now())
 
@@ -36,6 +39,8 @@ model Course {
   modules     Module[]
   enrollments Enrollment[]
   certificates Certificate[]
+  reviews     Review[]  
+  announcements Announcement[]  
 }
 
 model Module {
@@ -174,4 +179,31 @@ model Certificate {
   course          Course   @relation(fields: [courseId], references: [id])
   
   @@unique([userId, courseId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5 stars
+  comment   String?
+  createdAt DateTime @default(now())
+  
+  userId    String
+  courseId  String
+  
+  user      User     @relation(fields: [userId], references: [id])
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, courseId])  // One review per user per course
+}
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+  
+  courseId  String
+  authorId  String
+  
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id])
 }

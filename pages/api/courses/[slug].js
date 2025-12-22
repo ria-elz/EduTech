@@ -1,4 +1,4 @@
-import prisma from '../../../../lib/prisma'
+import prisma from '../../../lib/prisma'
 
 export default async function handler(req, res) {
   const { slug } = req.query
@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   const course = await prisma.course.findUnique({
     where: { slug },
     include: {
-      author: { select: { name: true } },
+      author: { select: { name: true, email: true, id: true } },
       modules: {
         orderBy: { position: 'asc' },
         include: {
@@ -16,7 +16,8 @@ export default async function handler(req, res) {
             orderBy: { position: 'asc' }
           }
         }
-      }
+      },
+      enrollments: true
     }
   })
 

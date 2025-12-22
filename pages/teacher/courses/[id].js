@@ -65,6 +65,36 @@ export default function TeacherCoursePage() {
           <h1 className="text-3xl font-bold mb-2">{course.title}</h1>
           <p className="text-gray-600 mb-4">{course.description}</p>
           
+        <div className="mb-4">
+  <label className="block font-semibold mb-2 text-gray-700">Category</label>
+  <select
+    value={course.category || 'Other'}
+    onChange={async (e) => {
+      const res = await fetch(`/api/teacher/courses/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category: e.target.value })
+      })
+      if (res.ok) {
+        mutate()
+        alert('Category updated!')
+      }
+    }}
+    className="w-full border rounded px-4 py-3"
+  >
+    <option value="Programming">💻 Programming</option>
+    <option value="Design">🎨 Design</option>
+    <option value="Business">💼 Business</option>
+    <option value="Marketing">📈 Marketing</option>
+    <option value="Mathematics">🔢 Mathematics</option>
+    <option value="Science">🔬 Science</option>
+    <option value="Language">🌍 Language</option>
+    <option value="Music">🎵 Music</option>
+    <option value="Health">❤️ Health & Fitness</option>
+    <option value="Other">📚 Other</option>
+  </select>
+</div>
+
           <div className="flex gap-4 items-center">
             <button
               onClick={publishCourse}
